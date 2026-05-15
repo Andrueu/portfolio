@@ -94,9 +94,53 @@
 ```json
 POST /api/v1/register
 {
-  "firstName": "Иван",
-  "lastName": "Иванов",
-  "userName": "ivan_ivanov",
-  "password": "Str0ng!Pass",
+  "firstName": "ivan",
+  "lastName": "ivanov",
+  "userName": "ivan",
+  "password": "Qwerty123!.",
   "recaptchaToken": "03AGdBq24..."
 }
+```
+#### Пример успешного ответа (201)
+
+```json
+{
+  "userId": 12345,
+  "userName": "ivan",
+  "firstName": "ivan",
+  "lastName": "ivanov"
+}
+```
+#### Пример ответа с ошибкой (400)
+
+```json
+{
+  "error": "Validation failed",
+  "details": [
+    "Password must be eight characters or longer.",
+    "Password must have at least one non alphanumeric character, one digit (0-9), one uppercase (A-Z), one lowercase (a-z), one special character."
+  ]
+}
+```
+![Api-contrack](apicontract.svg)
+---
+
+### 3.2. Алгоритм создания пользователя на стороне бэкенда
+
+1. Принять HTTP-запрос POST /api/v1/register с телом в JSON.
+2. Проверить наличие всех обязательных полей: firstName, lastName, userName, password, recaptchaToken. Если поле отсутствует → 400.
+3. Проверить формат firstName и lastName: только буквы, не пустые. Если некорректны → 400.
+4. Проверить userName на уникальность: SELECT COUNT(*) FROM users WHERE userName = ?. Если > 0 → 409: «User exists».
+5. Проверить пароль:
+   - Длина ≥ 8 символов.
+   - Минимум 1 заглавная буква (A-Z).
+   - Минимум 1 строчная буква (a-z).
+   - Минимум 1 цифра (0-9).
+   - Минимум 1 спецсимвол.
+   - Если не соответствует → 400 с перечислением нарушенных требований.
+6. Проверить reCAPTCHA: отправить recaptchaToken на сервер Google. Если проверка не пройдена → 400: «Please verify reCaptcha to register!».
+7. Захэшировать пароль.
+8. Создать запись в БД: INSERT INTO users (firstName, lastName, userName, passwordHash) VALUES (?, ?, ?, ?).
+9. Получить userId созданного пользователя.
+10. Вернуть ответ 201 (Created) с данными пользователя.
+
