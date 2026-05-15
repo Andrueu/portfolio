@@ -33,3 +33,70 @@
 | **Постусловие** | Товар опубликован на витрине маркетплейса и доступен покупателям для просмотра и покупки. |
 
 ![Use Case Diagram](usecase.svg)
+## Задача 3. REST API «Регистрация пользователя»
+
+### 3.1. Спецификация REST API: POST /api/v1/register
+
+#### Основные сведения
+
+| Параметр | Значение |
+|:---|:---|
+| HTTP метод | POST |
+| URL | /api/v1/register |
+| Content-Type | application/json |
+| Версионирование | URI versioning: /api/v1/register |
+
+#### Входные параметры (Request Body)
+
+| Параметр | Тип | Обязательный | Ограничения |
+|:---|:---|:---|:---|
+| firstName | string | Да | Не пустой, только буквы |
+| lastName | string | Да | Не пустой, только буквы |
+| userName | string | Да | Уникальный, не пустой |
+| password | string | Да | Мин. 8 символов, 1 заглавная, 1 строчная, 1 цифра, 1 спецсимвол |
+| recaptchaToken | string | Да | Токен, полученный от Google reCAPTCHA |
+
+#### Коды ответов
+
+| Код | Тип | Описание |
+|:---|:---|:---|
+| 201 Created | Успех | User Register Successfully |
+| 400 Bad Request | Клиентская | Validation failed (пароль / reCAPTCHA) |
+| 409 Conflict | Клиентская | User exists |
+
+#### Успешный ответ (201 Created)
+
+| Параметр | Тип | Описание |
+|:---|:---|:---|
+| userId | integer | ID созданного пользователя |
+| userName | string | Логин пользователя |
+| firstName | string | Имя |
+| lastName | string | Фамилия |
+
+#### Ответ с ошибкой (400 / 409)
+
+| Параметр | Тип | Описание |
+|:---|:---|:---|
+| error | string | Тип ошибки |
+| details | array of strings | Список сообщений об ошибках |
+
+#### Сообщения об ошибках
+
+| Код | Сообщение |
+|:---|:---|
+| 400 | Password must be eight characters or longer. |
+| 400 | Password must have at least one non alphanumeric character, one digit (0-9), one uppercase (A-Z), one lowercase (a-z), one special character. |
+| 400 | Please verify reCaptcha to register! |
+| 409 | User exists. |
+
+#### Пример запроса
+
+```json
+POST /api/v1/register
+{
+  "firstName": "Иван",
+  "lastName": "Иванов",
+  "userName": "ivan_ivanov",
+  "password": "Str0ng!Pass",
+  "recaptchaToken": "03AGdBq24..."
+}
